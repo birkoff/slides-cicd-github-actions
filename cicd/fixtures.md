@@ -2,7 +2,7 @@
 
 ## The "Seeding as a Service" Pattern
 
-
+---
 
 ## The Core Problem
 
@@ -16,6 +16,8 @@
 * **The Risk:** Creates a "Dependency Chain." If an external service (Auth, Payments) fails, your unrelated test fails.
 * **The Fix:** **Decouple** test data setup from the application logic.
 
+
+---
 
 
 ## Definitions: The What & The How
@@ -32,7 +34,7 @@
 * **Example:** A script connecting to PostgreSQL to insert rows.
 * **Purpose:** Prepares the environment *before* test logic executes.
 
-
+---
 
 ## Where is Seeding Critical?
 
@@ -41,14 +43,15 @@
 1. **Integration Tests:**
 * Verifying Lambda interactions with DynamoDB, RDS, or S3.
 
+
 2. **End-to-End (E2E) & Performance Tests:**
 * Simulating full user journeys (Gateway  DB  Gateway).
 
+
+
 *Note: Unit tests usually skip seeding in favor of Mocks.*
 
-
 ---
-
 
 ## The Strategy: "The API Sandwich"
 

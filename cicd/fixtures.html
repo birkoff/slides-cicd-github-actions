@@ -1,226 +1,78 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>Data State Management</title>
+    <title>reveal.js - Markdown Example</title>
 
-    <link rel="stylesheet" href="dist/reset.css">
-    <link rel="stylesheet" href="dist/reveal.css">
-    <link rel="stylesheet" href="dist/theme/black.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
 
-    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css">
 </head>
+
 <body>
+
 <div class="reveal">
+
     <div class="slides">
 
-        <section>
-            <h2>Data State Management</h2>
-            <h3>in Automated Testing</h3>
-            <p>The "Seeding as a Service" Pattern</p>
+
+        <!-- Slides are separated by three dashes (the default) -->
+        <section data-markdown="fixtures.md">
+<!--            <script type="text/template">-->
+<!--                ## Demo 1-->
+<!--                Slide 1-->
+<!--                -&#45;&#45;-->
+<!--                ## Demo 1-->
+<!--                Slide 2-->
+<!--                -&#45;&#45;-->
+<!--                ## Demo 1-->
+<!--                Slide 3-->
+<!--            </script>-->
         </section>
 
-        <section>
-            <section>
-                <h2>The Core Problem</h2>
-                <blockquote style="font-size: 1.5em; width: 90%;">
-                    "If your data is inconsistent, your tests will be flaky regardless of how good your code is."
-                </blockquote>
-            </section>
+        <!-- Slides are separated by regexp matching newline + three dashes + newline, vertical slides identical but two dashes -->
+        <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+            <script type="text/template">
+                ## Demo 2
+                Slide 1.1
 
-            <section>
-                <h3>The "Clean State" Dilemma</h3>
-                <ul>
-                    <li class="fragment"><strong>Pitfall:</strong> Using the App to create data (e.g., chaining <code>POST /users</code> then <code>POST /orders</code>).</li>
-                    <li class="fragment"><strong>The Risk:</strong> Creates a "Dependency Chain". If Auth fails, your Order test fails.</li>
-                    <li class="fragment"><strong>Solution:</strong> Decouple using <em>Data Seeds</em> directly in the persistence layer.</li>
-                </ul>
-            </section>
+                --
+
+                ## Demo 2
+                Slide 1.2
+
+                ---
+
+                ## Demo 2
+                Slide 2
+            </script>
         </section>
 
-        <section>
-            <section>
-                <h2>Definitions</h2>
-                <p>The "What" vs The "How"</p>
-            </section>
-
-            <section>
-                <h3>1. Data Fixtures</h3>
-                <p style="color: #42affa;">The "What"</p>
-                <ul>
-                    <li>Definition of the fixed state.</li>
-                    <li><em>Example:</em> A JSON file or Factory defining a "Premium User".</li>
-                    <li><strong>Purpose:</strong> Ensures a deterministic baseline.</li>
-                </ul>
-            </section>
-
-            <section>
-                <h3>2. Data Seeding</h3>
-                <p style="color: #42affa;">The "How"</p>
-                <ul>
-                    <li>Mechanism to populate the DB with fixtures.</li>
-                    <li><em>Example:</em> A script that truncates tables and inserts rows.</li>
-                    <li><strong>Purpose:</strong> Prepares environment <em>before</em> test logic runs.</li>
-                </ul>
-            </section>
-        </section>
-
-        <section>
-            <h3>Where is Seeding Critical?</h3>
-
-            <ul>
-                <li><strong>Integration Tests:</strong> Verifying interactions (Lambda ↔ DynamoDB).</li>
-                <li><strong>E2E / Performance:</strong> Simulating full user journeys.</li>
-            </ul>
-            <br><br>
-            <small><em>Note: Unit Tests usually skip seeding in favor of Mocks.</em></small>
-        </section>
-
-        <section>
-            <h2>The Strategy</h2>
-            <h3>"The API Sandwich"</h3>
-            <ol>
-                <li class="fragment"><strong>Fixture Setup:</strong> Call API to <span style="color:green">SEED</span> data.</li>
-                <li class="fragment"><strong>Test Execution:</strong> Run test logic.</li>
-                <li class="fragment"><strong>Fixture Teardown:</strong> Call API to <span style="color:red">DELETE</span> data.</li>
-            </ol>
-        </section>
-
-        <section>
-            <h3>Seeding as a Service</h3>
-            <p style="font-size: 0.7em;">Since the DB is private, we bridge the gap using API Gateway + Lambda.</p>
-
-
-
-            <div style="text-align: left; font-size: 0.7em; margin-top: 20px;">
-                <ol>
-                    <li><strong>Playwright:</strong> Generates UUID (<code>seed_id</code>).</li>
-                    <li><strong>Request:</strong> POST <code>/seed</code> with <code>{ action: 'create' }</code>.</li>
-                    <li><strong>Lambda:</strong> Inserts data (Idempotent).</li>
-                    <li><strong>Test:</strong> Runs against App.</li>
-                    <li><strong>Teardown:</strong> POST <code>/seed</code> with <code>{ action: 'delete' }</code>.</li>
-                </ol>
-            </div>
-        </section>
-
-        <section>
-            <h3>Part 1: The Database (Python)</h3>
-            <p><small>Key Concept: <strong>Idempotency</strong></small></p>
-            <pre><code class="python" data-trim data-noescape>
-def lambda_handler(event, context):
-    body = json.loads(event.get('body'))
-    seed_id = body.get('seed_id')
-
-    # Deterministic Naming
-    company_name = f"QA_Vendor_{seed_id}"
-
-    if body['action'] == "create":
-        # Check existence first (Idempotency)
-        if not exists(company_name):
-            insert_company(company_name)
-
-    elif body['action'] == "delete":
-        delete_company(company_name)
-                </code></pre>
-        </section>
-
-        <section>
-            <h3>Part 2: The Client (Playwright)</h3>
-            <p><small>Best Practice: Use <code>test.extend</code></small></p>
-            <pre><code class="typescript" data-trim data-noescape>
-// fixtures.ts
-export const test = base.extend<{ seedCatalog: SeededData }>({
-  seedCatalog: async ({ request }, use) => {
-    const seed_id = faker.string.uuid();
-
-    // 1. SETUP (Call Lambda)
-    await request.post(ENDPOINT, {
-        data: { action: 'create', seed_id }
-    });
-
-    // 2. YIELD (Run Test)
-    await use({ seed_id, ...data });
-
-    // 3. TEARDOWN (Call Lambda)
-    await request.post(ENDPOINT, {
-        data: { action: 'delete', seed_id }
-    });
-  },
-});
-                </code></pre>
-        </section>
-
-        <section>
-            <h3>The Resulting Test</h3>
-            <pre><code class="typescript" data-trim data-noescape>
-import { test } from './fixtures';
-
-test('Search API finds the seeded part',
-  async ({ request, seedCatalog }) => {
-
-  // Setup is already done! We have our data:
-  const { part_number } = seedCatalog;
-
-  // Execute Public API
-  const response = await request.get(
-      `/api/v1/search?q=${part_number}`
-  );
-
-  // Verify
-  expect(response.ok()).toBeTruthy();
-});
-                </code></pre>
-        </section>
-
-        <section>
-            <h3>Summary Matrix</h3>
-            <table style="font-size: 0.6em;">
-                <thead>
-                <tr>
-                    <th>Test Type</th>
-                    <th>Persistence</th>
-                    <th>Strategy</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>Unit Test</td>
-                    <td>None</td>
-                    <td>Mock/Stub</td>
-                </tr>
-                <tr>
-                    <td>Integration</td>
-                    <td>Docker/Dev</td>
-                    <td>Seed (Specific Rows)</td>
-                </tr>
-                <tr>
-                    <td>E2E / System</td>
-                    <td>Staging DB</td>
-                    <td>Seed (Clean Baseline)</td>
-                </tr>
-                <tr>
-                    <td>Load Test</td>
-                    <td>Prod Clone</td>
-                    <td>Massive Seed</td>
-                </tr>
-                </tbody>
-            </table>
-        </section>
 
     </div>
 </div>
 
-<script src="dist/reveal.js"></script>
-<script src="plugin/notes/notes.js"></script>
-<script src="plugin/markdown/markdown.js"></script>
-<script src="plugin/highlight/highlight.js"></script>
+<script src="../dist/reveal.js"></script>
+<script src="../plugin/markdown/markdown.js"></script>
+<script src="../plugin/highlight/highlight.js"></script>
+<script src="../plugin/notes/notes.js"></script>
+<script src="../plugin/math/math.js"></script>
+
 <script>
+
 	Reveal.initialize({
-		hash: true,
-		plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+		controls: true,
+		progress: true,
+		history: true,
+		center: true,
+
+		plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
 	});
+
 </script>
+
 </body>
 </html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js - Scroll View</title>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="../dist/reset.css">
+		<link rel="stylesheet" href="../dist/reveal.css">
+		<link rel="stylesheet" href="../dist/theme/black.css" id="theme">
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css">
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<div class="slides">
+				<section>
+					<h1>Data State Management in Automated Testing</h1>
+					<p>The "Seeding as a Service" Pattern</p>
+				</section>
+
+				<section>
+					<h2>The Core Problem</h2>
+					<h3>"Inconsistent Data = Flaky Tests"</h3>
+					<blockquote>
+						Regardless of how good your code is, if your data is inconsistent, your tests will fail.
+					</blockquote>
+				</section>
+
+				<section>
+					<p><strong>The "Clean State" Dilemma:</strong></p>
+					<ul>
+						<li><strong>The Pitfall:</strong> Creating data dependencies via the <strong>Test App</strong> itself (e.g., chaining <code>POST /users</code> then <code>POST /orders</code>).</li>
+						<li><strong>The Risk:</strong> Creates a "Dependency Chain." If an external service (Auth, Payments) fails, your unrelated test fails.</li>
+						<li><strong>The Fix:</strong> <strong>Decouple</strong> test data setup from the application logic.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Definitions: The What &amp; The How</h2>
+					<article>
+						<h3>1. Data Fixtures ("The What")</h3>
+						<ul>
+							<li><strong>Definition:</strong> The definition of the fixed state required for a test.</li>
+							<li><strong>Example:</strong> A static JSON file or a factory function defining a "Premium User" (<code>role: 'admin'</code>).</li>
+							<li><strong>Purpose:</strong> Ensures a deterministic baseline.</li>
+						</ul>
+					</article>
+				</section>
+
+				<section>
+					<article>
+						<h3>2. Data Seeding ("The How")</h3>
+						<ul>
+							<li><strong>Definition:</strong> The mechanism to populate the database with fixtures.</li>
+							<li><strong>Example:</strong> A script connecting to PostgreSQL to insert rows.</li>
+							<li><strong>Purpose:</strong> Prepares the environment <em>before</em> test logic executes.</li>
+						</ul>
+					</article>
+				</section>
+
+				<section>
+					<h2>Where is Seeding Critical?</h2>
+					<p><strong>Seeding is required where real persistence layers exist:</strong></p>
+					<ol>
+						<li>
+							<strong>Integration Tests:</strong>
+							<p>Verifying Lambda interactions with DynamoDB, RDS, or S3.</p>
+						</li>
+						<li>
+							<strong>End-to-End (E2E) &amp; Performance Tests:</strong>
+							<p>Simulating full user journeys (Gateway → DB → Gateway).</p>
+						</li>
+					</ol>
+					<p><small><em>Note: Unit tests usually skip seeding in favor of Mocks.</em></small></p>
+				</section>
+
+				<section>
+					<h2>The Strategy: "The API Sandwich"</h2>
+					<p>In <strong>Playwright</strong>, avoid using the UI to create data (too slow) or direct SQL (bypasses logic).</p>
+					<p><strong>The Pattern:</strong></p>
+					<ol>
+						<li><strong>Fixture Setup:</strong> Use a dedicated API request to <strong>SEED</strong> data.</li>
+						<li><strong>Test Execution:</strong> Run your actual test logic.</li>
+						<li><strong>Fixture Teardown:</strong> Use a dedicated API request to <strong>DELETE</strong> data.</li>
+					</ol>
+				</section>
+
+				<section>
+					<h2>Architecture: Seeding as a Service</h2>
+					<ol>
+						<li><strong>Playwright:</strong> Generates a UUID (<code>seed_id</code>).</li>
+						<li><strong>Request:</strong> POSTs to <code>/api/test/seed</code> with <code>{ action: 'create', seed_id: '...' }</code>.</li>
+						<li><strong>Lambda:</strong> Inserts data into RDS/DynamoDB (Idempotent).</li>
+						<li><strong>Test:</strong> Runs against the application.</li>
+						<li><strong>Teardown:</strong> POSTs to <code>/api/test/seed</code> with <code>{ action: 'delete' }</code>.</li>
+					</ol>
+				</section>
+
+				<section>
+					<h2>Implementation Part Idempotency</h2>
+					<p>The Lambda uses the <code>seed_id</code> to generate deterministic names. If Playwright retries, we don't create duplicates.</p>
+					<pre><code class="language-python">
+def lambda_handler(event, context):
+	body = json.loads(event.get('body'))
+	seed_id = body.get('seed_id')
+	company_name = f"QA_Vendor_{seed_id}"
+
+	if body['action'] == "create":
+		insert_company(company_name)
+
+	elif body['action'] == "delete":
+		delete_company(company_name)
+    				</code></pre>
+				</section>
+
+				<section>
+					<h2>Implementation Part 2: The Client (Playwright)</h2>
+					<p><strong>Best Practice: Use <code>test.extend</code> (Fixtures)</strong></p>
+					<ul>
+						<li><strong>Lazy-Loaded:</strong> Only runs if the test requests it.</li>
+						<li><strong>Composable:</strong> One fixture can depend on another.</li>
+						<li><strong>Automatic Teardown:</strong> Uses the <code>yield</code> pattern.</li>
+					</ul>
+				</section>
+
+				<section>
+					<pre><code class="language-typescript">
+// fixtures.ts
+export const test = base.extend&lt;{ seedCatalog: SeededData }&gt;({
+  seedCatalog: async ({ request }, use) => {
+    const seed_id = faker.string.uuid();
+
+    // 1. SETUP (Call Lambda)
+    await request.post(ENDPOINT, { data: { action: 'create', seed_id } });
+
+    // 2. YIELD (Run Test)
+    await use({ seed_id, ...data });
+
+    // 3. TEARDOWN (Call Lambda)
+    await request.post(ENDPOINT, { data: { action: 'delete', seed_id } });
+  },
+});
+    </code></pre>
+				</section>
+
+				<section>
+					<h2>The Test Execution</h2>
+					<p>The test remains clean and readable. It requests the <code>seedCatalog</code> fixture, which handles all the complexity behind the scenes.</p>
+					<pre><code class="language-typescript">
+import { test } from './fixtures';
+
+test('Search API finds the seeded part', async ({ request, seedCatalog }) => {
+  // Setup is already done! We have our data:
+  const { part_number } = seedCatalog;
+
+  // Execute Public API
+  const response = await request.get(`/api/v1/search?q=${part_number}`);
+
+  // Verify
+  expect(response.ok()).toBeTruthy();
+});
+    </code></pre>
+				</section>
+
+				<section>
+					<h2>When to Seed?</h2>
+					<table border="1">
+						<thead>
+						<tr>
+							<th>Test Type</th>
+							<th>Persistence Layer</th>
+							<th>Strategy</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td><strong>Unit Test</strong></td>
+							<td>None (In-memory)</td>
+							<td><strong>Mock/Stub.</strong> (No seeding).</td>
+						</tr>
+						<tr>
+							<td><strong>Integration</strong></td>
+							<td>Real (Docker/Dev DB)</td>
+							<td><strong>Seed.</strong> Insert specific rows needed.</td>
+						</tr>
+						<tr>
+							<td><strong>E2E / System</strong></td>
+							<td>Real (Staging DB)</td>
+							<td><strong>Seed.</strong> Reset/Prep DB for clean baseline.</td>
+						</tr>
+						</tbody>
+					</table>
+				</section>
+
+				<section>
+					<h2>Key Takeaways</h2>
+					<ol>
+						<li><strong>Decouple:</strong> Don't use your App UI to build test data.</li>
+						<li><strong>Sandwich:</strong> Setup -> Test -> Teardown.</li>
+						<li><strong>Idempotency:</strong> Ensure your seeder can run multiple times without error.</li>
+						<li><strong>Playwright Fixtures:</strong> Use <code>test.extend</code> over <code>beforeEach</code> for better control and automatic cleanup.</li>
+					</ol>
+				</section>
+			</div>
+		</div>
+
+		<script src="../dist/reveal.js"></script>
+		<script src="../plugin/notes/notes.js"></script>
+		<script src="../plugin/markdown/markdown.js"></script>
+		<script src="../plugin/highlight/highlight.js"></script>
+		<script>
+			Reveal.initialize({
+				view: 'scroll',
+				hash: true,
+
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+
+	</body>
+</html>

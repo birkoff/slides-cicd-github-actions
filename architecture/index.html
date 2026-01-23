@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>reveal.js - Markdown Example</title>
+
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/black.css" id="theme">
+
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css">
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <div class="slides">
+        <!-- Slides are separated by regexp matching newline + three dashes + newline, vertical slides identical but two dashes -->
+        <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+            <script type="text/template">
+                # Engineering Architecture Strategy
+                ## Ensuring Scalability & Consistency
+                ### By Hector Reyes Aleman
+
+
+                ---
+
+                ## The Challenge
+                * **Risk:** Diverging patterns in folder structure and dependency management.
+                * **Problem:** Inconsistent inter-service communication.
+                * **Need:** A unified approach to decide between **DDD** and **Layered Architectures**.
+
+                ---
+
+
+                ## The Decision: Complexity-Based Strategy
+                We adopt a dual-track approach based on business complexity:
+
+                --
+
+                1. **Domain-Driven Design (DDD):** For complex, multi-domain services.
+
+                --
+
+
+                2. **Layered Architecture:** For low-complexity/CRUD services.
+
+                > **Mandatory:** Strict Service Factories, Pydantic Validation, and Pub-Sub communication.
+
+                ---
+
+
+                ---
+
+                ## 1. Project Structure
+                ### A. The Decision Matrix
+
+                | Context | Architecture Style | Structure Focus |
+                | :--- | :--- | :--- |
+                | **High Complexity** | DDD | Grouped by **Business Concept** (e.g., `/catalog`) |
+                | **Low Complexity** | Layered | Grouped by **Technical Function** (e.g., `/handlers`) |
+
+                ---
+
+                ## 1. Project Structure
+                ### B. Common Agreements
+                * **Consistency:** One style per repo. No mixing DDD and Layered in one project.
+                * **Naming:** Shared conventions (snake_case for modules, CamelCase for classes).
+
+                ---
+
+                ## 2. Component Design
+                ### A. Service Construction (Factories)
+
+
+
+                * **Factory Pattern:** Single entry point for service instances.
+                * **No Internal Instantiation:** Dependencies must be injected. No `db = Database()` inside services.
+                * **Responsibility:** Factories own all wiring, defaults, and config.
+
+                ---
+
+                ## 2. Component Design
+                ### B. Schema & Validation (The Guardrails)
+
+                * **Tooling:** Pydantic for all data modeling at the edges.
+                * **Strict Typing:** No raw dictionaries at API boundaries.
+                * **Coverage:** 100% unit test coverage for validation rules.
+                * **Usage:** Mandatory for all Input (Request/Event) and Output (Response).
+
+                ---
+
+                ## 3. Layer Specifics
+                ### Layer 1: Handlers (Interface)
+
+                * **Role:** Entry point for HTTP or Events.
+                * **Agreement:** Parse input and delegate. **Zero business logic.**
+                * **Change:** Calls Factory directly; `JunctionNetEventHandler` is deprecated.
+
+                ---
+
+                ## Layer 1: Middleware Implementation
+                ```python
+                from src.common import api_responses
+                from src.common.shared.middlewares.organization import (
+                api_error_handler,
+                inject_organization_user_context,
+                get_cors_config
+                )
+
+                app = APIGatewayRestResolver(
+                enable_validation=True,
+                cors=get_cors_config()
+                )
+            </script>
+        </section>
+
+
+    </div>
+</div>
+
+<script src="../dist/reveal.js"></script>
+<script src="../plugin/markdown/markdown.js"></script>
+<script src="../plugin/highlight/highlight.js"></script>
+<script src="../plugin/notes/notes.js"></script>
+<script src="../plugin/math/math.js"></script>
+
+<script>
+
+	Reveal.initialize({
+		controls: true,
+		progress: true,
+		history: true,
+		center: true,
+
+		plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
+	});
+
+</script>
+
+</body>
+</html>

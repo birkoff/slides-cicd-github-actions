@@ -17,7 +17,15 @@
 		<div class="reveal">
 
 			<div class="slides">
-
+                <!-- Slides are separated by regexp matching newline + three dashes + newline, vertical slides identical but two dashes -->
+                <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+                    <script type="text/template">
+                        # Engineering Architecture Strategy
+                        ## Ensuring Scalability & Consistency
+                        ### By Hector Reyes Aleman
+                        ---
+                    </script>
+                </section>
                 <!-- Use external markdown resource, separate slides by three newlines; vertical slides by two newlines -->
                 <section data-markdown="markdown.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n"></section>
 
@@ -35,23 +43,7 @@
                     </script>
                 </section>
 
-                <!-- Slides are separated by regexp matching newline + three dashes + newline, vertical slides identical but two dashes -->
-                <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
-                    <script type="text/template">
-                        ## Demo 2
-                        Slide 1.1
 
-                        --
-
-                        ## Demo 2
-                        Slide 1.2
-
-                        ---
-
-                        ## Demo 2
-                        Slide 2
-                    </script>
-                </section>
 
                 <!-- No "extra" slides, since the separator can't be matched ("---" will become horizontal rulers) -->
                 <section data-markdown data-separator="$x">

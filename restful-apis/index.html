@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>reveal.js - Scroll View</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/black.css" id="theme">
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css">
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <div class="slides">
+        <section>
+            <h1 style="font-size: 2.5em;">RESTful API Design Guidelines</h1>
+            <p>Principles for Scalable & Evolvable Systems</p>
+            <p><small>By <strong>Hector Reyes-Aleman</strong></small></p>
+            <blockquote style="background: #333; padding: 20px;">
+                "An API is a public contract. Design for the developer who will use it three years from now."
+            </blockquote>
+        </section>
+
+        <section>
+            <h1 style="font-size: 2.5em;">RESTful API Design Guidelines</h1>
+            <p>Principles for Scalable & Evolvable Systems</p>
+            <p><small>Based on the insights of <strong>Hector Reyes-Aleman</strong></small></p>
+        </section>
+
+        <section>
+            <h2>The Core Goal</h2>
+            <ul>
+                <li class="fragment">Predictability & Intuition</li>
+                <li class="fragment">Stability over "Cleanliness"</li>
+                <li class="fragment">Client-Safe Evolvability</li>
+            </ul>
+            <aside class="notes">Focus on long-term maintenance rather than just initial setup.</aside>
+        </section>
+
+        <section>
+            <h3>1. Resources Over Actions</h3>
+            <p>Use <strong>Nouns</strong>, not Verbs in your endpoints.</p>
+            <div style="display: flex; justify-content: space-around; font-size: 0.8em;">
+                <div style="color: #ff5555; background: #222; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #ff5555;">❌ Bad (RPC)</h4>
+                    <code>POST /processInvoice</code><br>
+                    <code>POST /startBatch</code>
+                </div>
+                <div style="color: #50fa7b; background: #222; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: #50fa7b;">✅ Good (REST)</h4>
+                    <code>POST /invoices</code><br>
+                    <code>GET /batches</code>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h3>2. Hierarchical Relationships</h3>
+            <p>The path should describe the domain structure.</p>
+            <pre><code class="language-http" data-trim>
+                    GET /api/projects/{id}/documents
+                </code></pre>
+            <p><small>This clearly communicates: "Documents belonging to a specific Project."</small></p>
+        </section>
+
+        <section>
+            <h3>3. Identification vs. Filtering</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Use Case</th>
+                    <th>Example</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><strong>Path</strong></td>
+                    <td>Identity</td>
+                    <td><code>/users/123</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Query</strong></td>
+                    <td>Refinement</td>
+                    <td><code>?sort=desc</code></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>4. Flatten Your API</h3>
+            <p>Limit nesting to <strong>1 or 2 levels</strong> deep.</p>
+            <p style="color: #ff5555; font-size: 0.7em;">❌ /projects/1/batches/2/docs/9/pages/3</p>
+            <p style="color: #50fa7b; font-size: 0.7em;">✅ /documents/9/pages/3</p>
+            <p><small>Deep nesting makes URLs brittle and hard to change.</small></p>
+        </section>
+
+        <section>
+            <h3>5. Model State Transitions</h3>
+            <p>Instead of custom "action" endpoints, update the resource state.</p>
+            <pre><code class="language-json" data-trim data-line-numbers>
+                    // Update state, don't trigger "verbs"
+                    PATCH /api/invoices/100
+                    {
+                      "status": "approved"
+                    }
+                </code></pre>
+        </section>
+
+        <section>
+            <h3>6. Idempotency</h3>
+            <p>Retrying a request should be safe.</p>
+            <ul>
+                <li><strong>GET, PUT, DELETE:</strong> Inherently idempotent.</li>
+                <li><strong>POST:</strong> Use <code>Idempotency-Key</code> headers to prevent duplicate records.</li>
+            </ul>
+        </section>
+
+        <section>
+            <section>
+                <h3>7. Semantic Status Codes</h3>
+                <ul style="font-size: 0.8em;">
+                    <li><span style="color: #50fa7b;">201 Created</span> - Success + New Resource</li>
+                    <li><span style="color: #f1fa8c;">400 Bad Request</span> - Client error</li>
+                    <li><span style="color: #f1fa8c;">404 Not Found</span> - Missing resource</li>
+                    <li><span style="color: #ff5555;">429 Too Many Requests</span> - Rate limit</li>
+                </ul>
+            </section>
+            <section>
+                <h3>8. Modern Pagination</h3>
+                <p>Prefer <strong>Cursor-based</strong> over Page-based.</p>
+                <pre><code class="language-http">GET /api/docs?cursor=Ym9va21hcms&limit=25</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <h3>Naming Standards</h3>
+            <ul>
+                <li><strong>Plural Nouns:</strong> <code>/users</code></li>
+                <li><strong>Kebab-case URLs:</strong> <code>/user-profiles</code></li>
+                <li><strong>No Abbreviations:</strong> <code>/documents</code> (not <code>/docs</code>)</li>
+                <li><strong>Consistency:</strong> Choose snake_case or camelCase and stick to it.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Final Word</h2>
+            <blockquote style="background: #333; padding: 20px;">
+                "An API is a public contract. Design for the developer who will use it three years from now."
+            </blockquote>
+        </section>
+        <section>
+            <h1>RESTful API Design Guidelines</h1>
+            <h3>Principles for Scalable & Evolvable Systems</h3>
+            <p><small>Based on the article by <strong>Hector Reyes-Aleman</strong></small></p>
+        </section>
+
+
+        <section>
+            <h2>1. Resources over Actions</h2>
+            <p>Endpoints should represent <strong>Nouns</strong>, not Verbs.</p>
+            <div style="display: flex; justify-content: space-around;">
+                <div style="color: #ff5555;">
+                    <h4>❌ RPC Style</h4>
+                    <pre><code>POST /api/processInvoice</code></pre>
+                    <pre><code>POST /api/startBatch</code></pre>
+                </div>
+                <div style="color: #50fa7b;">
+                    <h4>✅ RESTful</h4>
+                    <pre><code>POST /api/invoices</code></pre>
+                    <pre><code>GET /api/batches</code></pre>
+                </div>
+            </div>
+        </section>
+
+
+
+        <section data-background-color="#fff"><h2>Scrollbar inverts<br>based on slide bg</h2></section>
+        <section data-auto-animate data-auto-animate-easing="cubic-bezier(0.770, 0.000, 0.175, 1.000)">
+            <h2>3. Query Params vs. Paths</h2>
+            <ul>
+                <li><strong>Path Segments:</strong> Used for identification.</li>
+                <li><strong>Query Params:</strong> Used for filtering, sorting, and pagination.</li>
+            </ul>
+            <pre><code class="hljs">/* Identification */
+                GET /api/invoices/100
+
+                /* Filtering & Sorting */
+                GET /api/invoices?status=paid&sort=-created_at</code></pre>
+        </section>
+        <section data-auto-animate data-auto-animate-easing="cubic-bezier(0.770, 0.000, 0.175, 1.000)">
+            <div class="r-hstack justify-center">
+                <h2>4. Flatten Your API</h2>
+                <p>Avoid "Path Hell." Limit nesting to 1 or 2 levels.</p>
+                <p style="color: #ff5555;">❌ <code>/projects/1/batches/2/docs/9/pages/3</code></p>
+                <p style="color: #50fa7b;">✅ <code>/api/documents/9/pages/3</code></p>
+            </div>
+            <h2 style="margin-top: 20px;">Auto-Animate</h2>
+        </section>
+        <section data-auto-animate data-auto-animate-easing="cubic-bezier(0.770, 0.000, 0.175, 1.000)">
+            <div class="r-stack">
+                <div data-id="box1" style="background: cyan; width: 300px; height: 300px; border-radius: 200px;"></div>
+                <div data-id="box2" style="background: magenta; width: 200px; height: 200px; border-radius: 200px;"></div>
+                <div data-id="box3" style="background: yellow; width: 100px; height: 100px; border-radius: 200px;"></div>
+            </div>
+            <h2 style="margin-top: 20px;">Auto-Animate</h2>
+        </section>
+        <section data-background-gradient="linear-gradient(to bottom, #283b95, #17b2c3)" id="gradient-bg">
+            <h2 data-id="code-title">Code highlights,<br />meet scroll triggers</h2>
+            <pre data-id="code-animation"><code class="hljs javascript" data-trim data-line-numbers="|4,8-11|17|22-24"><script type="text/template">
+						import React, { useState } from 'react';
+
+                        function Example() {
+                        const [count, setCount] = useState(0);
+
+                        return (
+                        <div>
+						      <p>You clicked {count} times</p>
+						      <button onClick={() => setCount(count + 1)}>
+						        Click me
+                            </button>
+						    </div>
+                        );
+                        }
+
+                        function SecondExample() {
+                        const [count, setCount] = useState(0);
+
+                        return (
+                        <div>
+						      <p>You clicked {count} times</p>
+						      <button onClick={() => setCount(count + 1)}>
+						        Click me
+                            </button>
+						    </div>
+                        );
+                        }
+					</script></code></pre>
+        </section>
+        <section class="stack">
+            <section data-background="https://static.slid.es/reveal/image-placeholder.png" id="image-bg">
+                <h2>Image Backgrounds</h2>
+            </section>
+            <section data-background-video-muted data-background-video="https://static.slid.es/site/homepage/v1/homepage-video-editor.mp4,https://static.slid.es/site/homepage/v1/homepage-video-editor.webm">
+                <div style="background-color: rgba(0, 0, 0, 0.9); color: #fff; padding: 20px;">
+                    <h2>Video background</h2>
+                </div>
+            </section>
+        </section>
+        <section><h2>The end</h2></section>
+
+    </div>
+
+</div>
+
+<script src="../dist/reveal.js"></script>
+<script src="../plugin/notes/notes.js"></script>
+<script src="../plugin/markdown/markdown.js"></script>
+<script src="../plugin/highlight/highlight.js"></script>
+<script>
+	Reveal.initialize({
+		view: 'scroll',
+		hash: true,
+
+		plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+	});
+</script>
+
+</body>
+</html>

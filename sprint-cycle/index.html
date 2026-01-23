@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Sprints & Software development life cycle (SDLC)</title>
+
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/black.css" id="theme">
+    		<style type="text/css" media="screen">
+    			.slides section.has-dark-background,
+    			.slides section.has-dark-background h3 {
+    				color: #fff;
+    			}
+    			.slides section.has-light-background,
+    			.slides section.has-light-background h3 {
+    				color: #222;
+    			}
+    		</style>
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <div class="slides">
+
+        <section id="context-problem">
+            <h2>Context and Problem Statement</h2>
+            <p>Currently, the team encounters two main sources of friction during the sprint lifecycle:</p>
+        </section>
+
+        <section>
+            <h2>Premature Implementation</h2>
+            <p>Development often begins before the full scope or edge cases of a ticket are understood, leading to mid-sprint context switching and scope creep.</p>
+        </section>
+
+        <section>
+            <h2>Integration Delays</h2>
+            <p>FE and BE developers often work in silos. When the two layers finally integrate, mismatches in data types, payload structures, or HTTP status codes cause "integration hell," resulting in rework and blocked tickets.</p>
+        </section>
+
+
+        <section id="decision">
+            <h2>The Decision</h2>
+            <p>We are adopting a strict <strong>"Analyze First, Contract First"</strong> policy. This consists of two mandatory agreements...</p>
+        </section>
+
+        <section>
+            <h3>1. The "First 3 Days" Analysis Rule</h3>
+            <p>Developers must read assigned tickets, validate understanding of requirements, Story points accuracy and identify ambiguity.</p>
+        </section>
+
+        <section>
+            <h3>2. Mandatory Schema Contracts (FE/BE Handshake)</h3>
+            <p>Before any code is written for a feature involving data exchange, a Contract Schema Agreement must be defined. This contract implies that the Interface is agreed upon before the Implementation details are worked out.</p>
+            <p>This agreement must be documented and must explicitly cover the following four quadrants:</p>
+        </section>
+
+        <section>
+            <table>
+                <thead>
+                <tr style="background-color: #683838;">
+                    <th>Quadrant</th>
+                    <th>Description</th>
+                    <th>Technical Detail Required</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><strong>API</strong></td>
+                    <td>Request/Response Schemas</td>
+                    <td>Validation rules, Required vs. Optional fields, Data Types.</td>
+                </tr>
+                <tr>
+                    <td><strong>Data</strong></td>
+                    <td>Data table Schemas</td>
+                    <td>Initial Layout.</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section id="consequences">
+            <h2>Consequences</h2>
+            <p><strong>Positive Outcomes:</strong></p>
+            <ul>
+                <li><strong>Reduced Rework:</strong> Clarifying requirements in the first 3 days prevents coding the "wrong thing."</li>
+                <li><strong>Parallel Development:</strong> Once the Contract Schema is agreed upon, FE can mock the data exactly as agreed, and BE can build the implementation. Neither blocks the other.</li>
+                <li><strong>Documentation:</strong> The schema agreement acts as live documentation for the feature.</li>
+            </ul>
+
+            <p><strong>Negative Outcomes / Risks:</strong></p>
+            <ul>
+                <li><strong>Perceived Slowness:</strong> The velocity may appear slower in the first few days of the sprint because less code is being committed.</li>
+                <li><strong>Discipline Required:</strong> It requires strict discipline to pause and document the contract before rushing to solve the problem in code.</li>
+            </ul>
+        </section>
+
+        <section id="compliance">
+            <h2>Compliance</h2>
+            <ul>
+                <li>Pull Requests (PRs) involving client-server communication should link to the agreed Contract Schema.</li>
+                <li>During Stand-up on Day 4, the Scrum Master/Lead will verify that all active tickets have an established contract.</li>
+            </ul>
+        </section>
+
+
+    </div>
+
+</div>
+
+<script src="../dist/reveal.js"></script>
+<script>
+	Reveal.initialize({
+		center: true,
+		history: true,
+
+		// transition: 'slide',
+		// transitionSpeed: 'slow',
+		// backgroundTransition: 'slide'
+	});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Architectural Decision Records (ADR)</title>
+
+		<link rel="stylesheet" href="../dist/reveal.css">
+		<link rel="stylesheet" href="../dist/theme/black.css" id="theme">
+		<style type="text/css" media="screen">
+			.slides section.has-dark-background,
+			.slides section.has-dark-background h3 {
+				color: #fff;
+			}
+			.slides section.has-light-background,
+			.slides section.has-light-background h3 {
+				color: #222;
+			}
+		</style>
+	</head>
+
+	<body>
+
+
+		<div class="reveal">
+
+			<div class="slides">
+				<section>
+					<h2>Technical decision-making....</h2>
+					<h4>Anti-patterns</h4>
+					<ul>
+						<li>
+							No decision is made at all, out of fear of making the wrong choice.
+
+						</li>
+						<li>
+							A decision is made without any justification, and people don’t understand why it was made. This results in the same topic being discussed multiple times.
+
+						</li>
+						<li>
+							The decision isn’t captured in an architectural decision repository, so team members forget or don’t know that the decision was made.
+
+						</li>
+					</ul>
+				</section>
+				<section>
+					<h2>Architectural Decision Records (ADR)</h2>
+					<img src="assets/adrs.png" class="r-stretch">
+				</section>
+				<section>
+					<p>An Architectural Decision Record (ADR) is a document that represent decisions made by the team and provide a history of all changes the team makes that affects the structure, quality attributes, or behavior of a system.</p>
+				</section>
+
+				<section>
+					<p>These <b>DECISIONS</b> are driven by both functional and non-functional requirements.</p>
+				</section>
+
+
+				<section id="framework-goals">
+					<h2>Framework Goals</h2>
+					<p>The ADR framework establishes a culture of:</p>
+					<ul>
+						<li>
+							<strong>Visibility:</strong>
+							Decisions are not hidden in private chats or emails.
+						</li>
+						<li>
+							<strong>Traceability:</strong>
+							The "why" behind a design is preserved for future developers.
+						</li>
+						<li>
+							<strong>Strategic Alignment:</strong>
+							Ensures teams, programs, and departments move in the same direction.
+						</li>
+					</ul>
+				</section>
+
+				<section data-transition="zoom">
+					<h4>Implementation and Enforcement</h4>
+					<img src="assets/adr.png" class="r-stretch">
+					<p>The team uses the ADRs as a reference during code and architectural reviews, design and implementation tasks.</p>
+				</section>
+
+
+				<section>
+					<h2>ADR Contents</h2>
+					<p>ADRs should follow a project-wide template to ensure consistency. At a minimum, every record must include:</p>
+
+					<ol>
+						<li>
+							<strong>Context:</strong>
+							What is the problem? What are the pressures or constraints?
+						</li>
+						<li>
+							<strong>Decision:</strong>
+							What is the proposed solution?
+						</li>
+						<li>
+							<strong>Consequences:</strong>
+							What are the trade-offs? What becomes easier or harder as a result?
+						</li>
+					</ol>
+				</section>
+
+				<section data-transition="zoom">
+					<h3>The Review Workflow</h3>
+					<ol>
+						<li><strong>Proposed:</strong> The ADR is written and shared for review.</li>
+						<li><strong>Review Meeting:</strong> The team spends 10–15 minutes reading the ADR and flagging unclear topics.</li>
+						<li><strong>Discussion:</strong> The owner discusses comments with the team.</li>
+						<li>
+							<strong>Outcome: </strong>Accepted / Rejected / Rework
+							</ul>
+						</li>
+					</ol>
+				</section>
+
+				<section data-transition="zoom">
+					<h3>What Does an ADR Looks Like</h3>
+				</section>
+
+				<section data-markdown="assets/example-adr.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n"></section>
+
+				<section data-markdown="assets/example-adr.md" data-separator="^\n---\n">
+				</section>
+
+
+			</div>
+
+		</div>
+
+		<script src="../dist/reveal.js"></script>
+		<script>
+			Reveal.initialize({
+				center: true,
+				history: true,
+
+				// transition: 'slide',
+				// transitionSpeed: 'slow',
+				// backgroundTransition: 'slide'
+			});
+		</script>
+
+	</body>
+</html>

@@ -1,77 +1,298 @@
 <!doctype html>
 <html lang="en">
-
-	<head>
-		<meta charset="utf-8">
-
-		<title>Github Actions</title>
-
-		<link rel="stylesheet" href="../dist/reveal.css">
-		<link rel="stylesheet" href="../dist/theme/blood.css" id="theme">
-
-        <link rel="stylesheet" href="../plugin/highlight/monokai.css">
-	</head>
-
-	<body>
-
-		<div class="reveal">
-
-			<div class="slides">
-
-                <!-- Use external markdown resource, separate slides by three newlines; vertical slides by two newlines -->
-                <section data-markdown="README.md" data-separator="^\n\n\n" data-separator-vertical="^\n\n"></section>
-
-
-
-                <!-- add optional line count offset, in this case 287 -->
-                <section data-markdown>
-                    <script type="text/template">
-                        ## echo.c
-
-                        ```c [287: 2|4,6]
-                        /* All of the options in this arg are valid, so handle them. */
-                        p = arg + 1;
-                        do {
-                            if (*p == 'n')
-                                nflag = 0;
-                            if (*p == 'e')
-                                eflag = '\\';
-                        } while (*++p); 
-                        ```
-                        [source](https://git.busybox.net/busybox/tree/coreutils/echo.c?h=1_36_stable#n287)
-                    </script>
-                </section>
-
-                <!-- Images -->
-                <section data-markdown>
-                    <script type="text/template">
-                        ![Sample image](https://static.slid.es/logo/v2/slides-symbol-512x512.png)
-                    </script>
-                </section>
-
-
-
+<head>
+    <meta charset="utf-8">
+    <title>Advanced Workflow Syntax Workshop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/monokai.min.css">
+    <style>
+        .hljs-ln-numbers { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; text-align: center; color: #ccc; border-right: 1px solid #CCC; vertical-align: top; padding-right: 5px; }
+        .highlight-title { background: #ff5555; color: white; padding: 5px 20px; border-radius: 5px; display: inline-block; margin-bottom: 20px; }
+        .lab-title { background: #50fa7b; color: black; padding: 5px 20px; border-radius: 5px; display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h1>Release Integration</h1>
+            <p>Analyzing a Dynamic Matrix Pipeline</p>
+            <div style="background: #444; padding: 10px; border-radius: 8px;">
+                <code>CI/CD + GitHub Actions Workshop</code>
             </div>
-		</div>
+        </section>
 
-		<script src="../dist/reveal.js"></script>
-        <script src="../plugin/markdown/markdown.js"></script>
-        <script src="../plugin/highlight/highlight.js"></script>
-        <script src="../plugin/notes/notes.js"></script>
-        <script src="../plugin/math/math.js"></script>
+        <section>
+            <h2>The Workflow Architecture</h2>
+            <p>This pipeline doesn't deploy everything. It's smart.</p>
+            <ul>
+                <li class="fragment"><strong>Triggers:</strong> Manual or Push to Main</li>
+                <li class="fragment"><strong>Job 1 (Configure):</strong> Logic layer (What changed?)</li>
+                <li class="fragment"><strong>Job 2 (Info):</strong> Debugging & Visibility</li>
+                <li class="fragment"><strong>Job 3 (Dev):</strong> Parallel Deployment</li>
+                <li class="fragment"><strong>Job 4 (Staging):</strong> Dependent Deployment</li>
+            </ul>
+        </section>
 
-		<script>
+        <section>
+            <section>
+                <h3>Step 1: The Triggers</h3>
+                <pre><code class="language-yaml" data-line-numbers="2-16">on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        type: choice
+        options: [auto-detect, admin, ...]
+  push:
+    branches: [main]
+    paths:
+      - apps/admin-portal/**
+      - apps/pricing-portal/**</code></pre>
+            </section>
+            <section data-background="#ff5555">
+                <h2>WORKSHOP CHALLENGE 1</h2>
+                <p>If I push a change to <code>docs/readme.md</code>, will this pipeline run?</p>
+                <p class="fragment"><strong>Answer:</strong> No. The <code>paths:</code> filter restricts it to specific app folders.</p>
+            </section>
+        </section>
 
-			Reveal.initialize({
-				controls: true,
-				progress: true,
-				history: true,
-				center: true,
+        <section>
+            <section>
+                <h3>Step 2: The Logic (Configure)</h3>
+                <p>The "brain" of the pipeline.</p>
+                <pre><code class="language-yaml" data-line-numbers="21-25|45-55">outputs:
+  apps: ${{ steps.detect.outputs.apps }}
+  JIRA_ISSUE_KEY: ${{ steps.detect.outputs.JIRA_ISSUE_KEY }}
 
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX ]
-			});
+# Inside detect step:
+echo "apps=$APPS_JSON" >> $GITHUB_OUTPUT</code></pre>
+            </section>
+            <section data-background="#6272a4">
+                <h3>Small Question:</h3>
+                <p>Why do we need <code>$GITHUB_OUTPUT</code>?</p>
+                <blockquote class="fragment">
+                    Because variables in one Job are <strong>lost</strong> when the job ends.
+                    Outputs are the only way to pass data to the next Job.
+                </blockquote>
+            </section>
+        </section>
 
-		</script>
+        <section>
+            <section>
+                <h3>Step 3: The Matrix Strategy</h3>
+                <pre><code class="language-yaml" data-line-numbers="140-142|145-146">dev:
+  needs: configure
+  strategy:
+    matrix:
+      app: ${{ fromJson(needs.configure.outputs.apps) }}
 
-	</body>
+  env:
+    APP_NAME: ${{ matrix.app }}</code></pre>
+            </section>
+            <section data-background="#50fa7b" style="color: #282a36">
+                <h2>GROUP EXERCISE</h2>
+                <p>If <code>configure</code> detects 3 apps: <strong>[admin, pricing, udm]</strong>...</p>
+                <p>How many <u>parallel</u> "dev" jobs will GitHub start?</p>
+                <h1 class="fragment">3</h1>
+            </section>
+        </section>
+
+        <section>
+            <h3>Workshop Cheat Sheet</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>Purpose</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><code>needs</code></td>
+                    <td>Creates dependencies (Sequential)</td>
+                </tr>
+                <tr>
+                    <td><code>matrix</code></td>
+                    <td>Fan-out (Parallel)</td>
+                </tr>
+                <tr>
+                    <td><code>fromJson</code></td>
+                    <td>Converts string list to usable array</td>
+                </tr>
+                <tr>
+                    <td><code>workflow_dispatch</code></td>
+                    <td>The "Run Workflow" button</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h1>Advanced Workflow Syntax</h1>
+            <p>Expressions, Contexts, and Advanced YAML</p>
+            <hr>
+            <p><small>By the end of this, you’ll build complex, dynamic pipelines.</small></p>
+        </section>
+
+        <section>
+            <section>
+                <h2>1. Expressions <code>${{ }}</code></h2>
+                <p>Allows dynamic evaluation of values at runtime.</p>
+                <pre><code class="language-yaml" data-line-numbers>if: ${{ github.ref == 'refs/heads/main' }}
+run: echo "Hello ${{ github.actor }}"</code></pre>
+            </section>
+            <section>
+                <h3>Common Functions</h3>
+                <ul>
+                    <li><code>startsWith(str, prefix)</code> / <code>contains()</code></li>
+                    <li><code>toJSON()</code> / <code>fromJSON()</code></li>
+                    <li><strong>Status Checks:</strong> <code>success()</code>, <code>failure()</code></li>
+                </ul>
+            </section>
+            <section data-background="#ff5555">
+                <div class="highlight-title">QUIZ</div>
+                <h3>Which check is missing?</h3>
+                <p>I want a step to run <strong>only</strong> if the previous step failed.</p>
+                <pre><code class="language-yaml">steps:
+  - name: Fix things
+    if: ___________
+    run: echo "Repairing..."</code></pre>
+                <p class="fragment">Answer: <code>${{ failure() }}</code></p>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>2. Contexts</h2>
+                <p>Global objects providing runtime info.</p>
+
+                <table style="font-size: 0.6em;">
+                    <tr><th>Context</th><th>Usage</th></tr>
+                    <tr><td><code>github</code></td><td>Event, Repo, Actor info</td></tr>
+                    <tr><td><code>env</code></td><td>Variables set in workflow</td></tr>
+                    <tr><td><code>secrets</code></td><td>Encrypted values</td></tr>
+                    <tr><td><code>steps / needs</code></td><td>Data from other steps/jobs</td></tr>
+                </table>
+            </section>
+            <section>
+                <h3>Context Example</h3>
+                <pre><code class="language-yaml">run: echo "Branch is ${{ github.ref }}"
+if: ${{ runner.os == 'Linux' }}</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>3. Variables & Data Passing</h2>
+                <p>Three ways to store data:</p>
+                <ol>
+                    <li><strong>Environment Variables</strong> (per step/job/workflow)</li>
+                    <li><strong>Step Outputs</strong> (pass strings between steps)</li>
+                    <li><strong>Artifacts</strong> (persist files/logs)</li>
+                </ol>
+            </section>
+            <section>
+                <h3>The "Fresh Runner" Rule</h3>
+                <blockquote style="background: #444; border-left: 10px solid #ffb86c;">
+                    Jobs run on <strong>fresh runners</strong>. Env vars do NOT persist between Job A and Job B.
+                </blockquote>
+                <p>Use <code>outputs:</code> or <code>artifacts</code> to bridge the gap.</p>
+            </section>
+            <section>
+                <h3>Writing to Output</h3>
+                <pre><code class="language-yaml" data-line-numbers="2-3">run: |
+  echo "version=1.0.4" >> $GITHUB_OUTPUT
+  echo "status=passed" >> $GITHUB_OUTPUT</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>4. Advanced YAML</h2>
+                <h3>Matrix Builds</h3>
+                <pre><code class="language-yaml" data-line-numbers="4-7">strategy:
+  matrix:
+    os: [ubuntu-latest, windows-latest]
+    node: [20, 22]</code></pre>
+                <p>This creates <strong>4 parallel jobs</strong>.</p>
+            </section>
+            <section>
+                <h3>Concurrency Control</h3>
+                <p>Avoid "Race Conditions" or duplicate deployments.</p>
+                <pre><code class="language-yaml">concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <section data-background="#282a36">
+                <div class="lab-title">HANDS-ON LAB</div>
+                <h2>The "Dynamic Test" Workflow</h2>
+                <ol style="font-size: 0.8em;">
+                    <li>Create <code>.github/workflows/expressions-lab.yml</code></li>
+                    <li>Set up a <strong>Node Matrix</strong> (20, 22)</li>
+                    <li>Capture test results into <code>$GITHUB_OUTPUT</code></li>
+                    <li><strong>Upload</strong> a log artifact</li>
+                    <li><strong>Conditionally Deploy</strong> only if <code>main</code> and <code>success</code></li>
+                </ol>
+            </section>
+            <section>
+                <h3>Lab Code Snippet (Job 1)</h3>
+                <pre style="font-size: 0.4em;"><code class="language-yaml" data-line-numbers="6-11|27-33">jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Tests
+        run: npm test | tee test-${{ matrix.node }}.log
+      - name: Save Result
+        id: save
+        run: |
+          if grep -q "FAIL" test.log; then
+            echo "result=failure" >> $GITHUB_OUTPUT
+          else
+            echo "result=success" >> $GITHUB_OUTPUT
+          fi</code></pre>
+            </section>
+            <section>
+                <h3>Lab Code Snippet (Job 2)</h3>
+                <pre style="font-size: 0.5em;"><code class="language-yaml" data-line-numbers="2-3">deploy:
+    needs: test
+    if: ${{ needs.test.outputs.result == 'success' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to production..."</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <h2>Conclusion</h2>
+            <ul>
+                <li>Use <strong>Expressions</strong> for logic.</li>
+                <li>Use <strong>Contexts</strong> for environment info.</li>
+                <li>Use <strong>Matrix</strong> for scale.</li>
+                <li>Use <strong>Outputs/Artifacts</strong> for data flow.</li>
+            </ul>
+            <p>Questions?</p>
+        </section>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/highlight/highlight.min.js"></script>
+<script>
+	Reveal.initialize({
+		hash: true,
+		slideNumber: 'c/t',
+		plugins: [ RevealHighlight ]
+	});
+</script>
+</body>
 </html>

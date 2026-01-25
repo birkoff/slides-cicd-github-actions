@@ -143,7 +143,12 @@ class ServiceFactory:
 
 
 
+Minimal example of an Application Service that uses the OrganizationUserContext object
 ```python
+# Instead of using a generic dict 
+# Use the OrganizationUserContext which is injected by the shared middleware.
+# Database and Repository dependencies are ommited for simplicity.
+    
 from src.common.shared.infrastructure.events_bus.eventbrigde_bus import EventBridge
 from src.common.shared.schemas.organization_user_context import OrganizationUserContext
 

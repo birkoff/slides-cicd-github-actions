@@ -279,7 +279,7 @@ In this lab, you learned how to:
 - 👏 Use the CodeQL action to scan your code for vulnerabilities
 
 > **Note**
-> What you learned in this lab is just the beginning of how GitHub Advanced Security can assist you in making your code secure. To delve deeper, feel free to read through the [Addendum - GitHub Advanced Security](./addendum-004-github-advanced-security.md)!
+> What you learned in this lab is just the beginning of how GitHub Advanced Security can assist you in making your code secure. To delve deeper, feel free to read through the [Addendum - GitHub Advanced Security](addendum-004-github-advanced-security.md)!
 
 ---
 

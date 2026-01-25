@@ -16,7 +16,7 @@ You will learn how to easily authenticate against Azure using an action, use Act
 You have already learned how to utilize variables within a workflow. However, up to now, you have only used variables provided by GitHub itself. Now, let's learn how to add your own variables (and secrets) to define repository-specific configurations and other values that you might not want to hard-code into your workflow files.
 
 1. Navigate to your repository's **Settings**, expand **Secrets and variables**, and select **Actions**.
-    ![Navigate to Actions secrets](./images/005/issue-ops-005-navigate-secrets.png)
+    ![Navigate to Actions secrets](images/005/issue-ops-005-navigate-secrets.png)
 
 2. Pause here and observe that there are already some organization secrets defined: `AZ_CLIENT_ID`, `AZ_SECRET`, `AZ_SUBSCRIPTION_ID`, and `AZ_TENANT_ID`. These secrets were created for you by your organization's administrator, allowing you to authenticate against Azure with a service principal (also known as "machine user") to execute your deployment. You can (and will) access these secrets from your workflow files under the `secrets` namespace (e.g., `secrets.AZ_CLIENT_ID`). Further details on the scopes of secrets and variables are provided below.
 
@@ -25,7 +25,7 @@ You have already learned how to utilize variables within a workflow. However, up
     ![Click on New repository variable](images/005/issue-ops-006-navigate-variables.png)
 
 4. Name the variable `AZ_APP_NAME` and provide a value of your choice, preferably your repository's name (since the app name needs to be unique across all Azure web services, choose something distinctive). Click on **Add variable** once finished.
-    ![Create a new variable](./images/005/issue-ops-007-create-az-app-name.png)
+    ![Create a new variable](images/005/issue-ops-007-create-az-app-name.png)
 
 Now, you've created a variable that will be accessible from all workflows within this repository as `${{ vars.APP_NAME }}`. We will make use of this in our deployment workflow.
 

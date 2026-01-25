@@ -28,28 +28,28 @@ Let's now initiate our deployment environment request.
 
 1. Navigate to the URL of the deployment environment repository that you received from your trainer.
 2. Click on **Issues** -> **New Issue**.
-    ![Navigate to Issues page](./images/005/issue-ops-001-navigate-issue.png)
+    ![Navigate to Issues page](images/005/issue-ops-001-navigate-issue.png)
 3. You will be presented with a list of [Issue Templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository). Choose **Request a Deployment Environment**.
-    ![Select Issue Template](./images/005/issue-ops-002-select-issue-template.png)
+    ![Select Issue Template](images/005/issue-ops-002-select-issue-template.png)
 4. A form will appear with a single input field. Enter your repository name along with the leading organization name (you can simply copy this from the URL of your repository - the segment after `github.com`). Submit the issue once done.
-    ![Fill out Issue Template](./images/005/issue-ops-003-fill-issue-template.png)
+    ![Fill out Issue Template](images/005/issue-ops-003-fill-issue-template.png)
 5. A comment from the `github-actions` bot will inform you that the environment is being created. Head to the **Actions** tab of the repository to see the running workflow triggered by your issue creation.
 6. Once the workflow concludes, the comment on the issue will update with a success message, signaling that you can proceed.
-    ![GitHub Bot's success message](./images/005/issue-ops-004-view-issue-success-comment.png)
+    ![GitHub Bot's success message](images/005/issue-ops-004-view-issue-success-comment.png)
 
 ### 1.2 Create a new Actions variable
 
 You have already learned how to utilize variables within a workflow. However, up to now, you have only used variables provided by GitHub itself. Now, let's learn how to add your own variables (and secrets) to define repository-specific configurations and other values that you might not want to hard-code into your workflow files.
 
 1. Navigate to your repository's **Settings**, expand **Secrets and variables**, and select **Actions**.
-    ![Navigate to Actions secrets](./images/005/issue-ops-005-navigate-secrets.png)
+    ![Navigate to Actions secrets](images/005/issue-ops-005-navigate-secrets.png)
 2. Pause here and observe that there are already some organization secrets defined: `AZ_SUBSCRIPTION_ID` and `AZ_TENANT_ID`. These secrets were created for you by your organization's administrator, allowing you to authenticate against Azure with a service principal (also known as "machine user") to execute your deployment. You can (and will) access these secrets from your workflow files under the `secrets` namespace (e.g., `secrets.AZ_CLIENT_ID`). Further details on the scopes of secrets and variables are provided below.
 3. Navigate to the **Variables** tab. Note that two variables, `AZ_CLIENT_ID` and `AZ_RESOURCE_GROUP`, are already present. These were created by the IssueOps workflow in step [1.1 Request a deployment environment](#11-request-a-deployment-environment).
-    ![Click on New repository variable](./images/005/issue-ops-006-navigate-variables.png)
+    ![Click on New repository variable](images/005/issue-ops-006-navigate-variables.png)
 4. Click on **New repository variable**. Name the variable `AZ_APP_NAME` and provide a value of your choice, preferably your repository's name (since the app name needs to be unique across all Azure web services, choose something distinctive). Click on **Add variable** once finished.
-    ![Create a new variable](./images/005/issue-ops-007-create-az-app-name.png)
+    ![Create a new variable](images/005/issue-ops-007-create-az-app-name.png)
 5. Review the finalized variables. These will be accessible in your Actions workflows under the `vars` scope (e.g., `${{ vars.AZ_APP_NAME }}`), and you will use them in the steps that follow.
-   ![Final variables](./images/005/issue-ops-008-final-variables.png)
+   ![Final variables](images/005/issue-ops-008-final-variables.png)
 
 <details>
   <summary>(optional) Understand Azure and the provided secrets and variables</summary>

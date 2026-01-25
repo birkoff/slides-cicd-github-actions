@@ -22,7 +22,7 @@ Enough talking. Let's create our very first GitHub Actions workflow!
 
 1. In your repository, click on the **Actions** tab. You will be offered a list of workflow suggestions. For your first workflow, however, you need to click the **set up a workflow yourself** link at the top of the page.
 
-  ![Screenshot depicting the initial actions tab](./images/001/setup_new_workflow.png)
+  ![Screenshot depicting the initial actions tab](images/001/setup_new_workflow.png)
 
 2. This will automatically bring you to the GitHub Web GUI Action Editor, which prompts you to create a new file in your repository under `.github/workflows/main.yml`. Paste the following content into it:
 

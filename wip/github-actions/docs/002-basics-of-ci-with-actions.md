@@ -84,7 +84,7 @@ Observe that our workflow employs a [matrix build strategy](https://docs.github.
 
 Your newly implemented CI workflow now runs with every push. Given that you just pushed a new commit containing the workflow you've created, you should already have a workflow run in progress.
 
-![Actions overview showing the Node.js workflow running](./images/running-nodejs-workflow.png)
+![Actions overview showing the Node.js workflow running](images/running-nodejs-workflow.png)
 
 Keep in mind that we will need to run tests as part of our CI workflow. You can find most of this application's tests in the [`src/pages/Home.test.tsx`](../src/pages/Home.test.tsx) file, which partly looks like this:
 
@@ -117,7 +117,7 @@ describe("<Home />", (): void => {
 
 The result of your last push to the main branch should resemble the following:
 
-![Actions overview showing a successful workflow run](./images/success-nodejs-workflow.png)
+![Actions overview showing a successful workflow run](images/success-nodejs-workflow.png)
 
 ## 3 - Add code coverage to your workflow
 
@@ -128,7 +128,7 @@ Doing that is straightforward with GitHub Actions. You determine where and when 
 ### 3.1 - Find an action in the marketplace
 
 1. Search for an Action in the GitHub Marketplace:  `vitest coverage report`
-  ![Search Result for "Vitest Test Coverage" in the GitHub Marketplace](./images/marketplace-vitest-search-result.png)
+  ![Search Result for "Vitest Test Coverage" in the GitHub Marketplace](images/marketplace-vitest-search-result.png)
 
 2. Click on the **Vitest Coverage Report** action.
 
@@ -233,7 +233,7 @@ jobs:
 5. Click **Create pull request**.
 
 6. Wait for the CI workflow to run, and you will see a new comment in your pull request with the code coverage.
-![PR Comment with a coverage report from vitest](./images/vitest-coverage-report.png)
+![PR Comment with a coverage report from vitest](images/vitest-coverage-report.png)
 
 ### 3.6. (Optional) - Enforce a certain coverage threshold with Repository Rulesets
 
@@ -265,7 +265,7 @@ Let's try that out in this project:
 
 The `coverage` step should now fail. However, this does not yet prevent you from merging this PR. The merge button is still clickable:
 
-![GitHub checks with a failed action-workflow, but the merge button is still active](./images/merge-possible-with-failed-checks.png)
+![GitHub checks with a failed action-workflow, but the merge button is still active](images/merge-possible-with-failed-checks.png)
 
 To make this work, we need to set our target branch `main` as a protected branch and enforce that the `build` workflow be successful before a merge can be executed. In the past this was done with branch protection rules, but now it is recommended to use repository rulesets as they allow to manage policy at an organization or enterprise level rather than per repository. However, for the sake of simplicity we will use repo rulesets at the repository level in this workshop.
 
@@ -282,13 +282,13 @@ To make this work, we need to set our target branch `main` as a protected branch
 6. For the **Branch rules**, there are several that are useful for a typical CI workflow. For now, select **Require status checks to pass before merging**.
 
 7. Click on the **Add checks** button. In the search box that will appear, look for `Build and Test` (or whatever name you chose for the job in step 3.3) and wait for a second or two and it should find that job.  Select the job. *(Note that you might also see the jobs of the previous matrix builds with specific Node versions. You can ignore these.)*
-    ![Settings page with repo ruleset for main branch](./images/setting-up-repo-rulesets.png)
+    ![Settings page with repo ruleset for main branch](images/setting-up-repo-rulesets.png)
 
 7. Scroll down and click `Create`.
 
 If you now return to the PR, you will see that the merge button is inactive and can't be clicked anymore.
 
-![GitHub checks with a failed action-workflow and merge button is inactive](./images/merge-prevented-with-failed-checks.png)
+![GitHub checks with a failed action-workflow and merge button is inactive](images/merge-prevented-with-failed-checks.png)
 
 As an administrator, you will have the option to force a merge. Regular users won't have this privilege.
 
